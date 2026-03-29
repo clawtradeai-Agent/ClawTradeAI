@@ -310,9 +310,9 @@ Trading cryptocurrencies involves substantial risk of loss. This software is pro
 
 - Website: [clawtradeai.xyz](https://clawtradeai.xyz)
 - X (Twitter): [@ClawtradeAISol](https://x.com/ClawtradeAISol)
-- GitHub: [@clawtrade](https://github.com/clawtrade)
-- Discord: [Join our server](https://discord.gg/clawtrade)
+- GitHub: [@clawtradeai-Agent](https://github.com/clawtradeai-Agent/ClawTradeAI)
+
 
 ---
 
-Built with ❤️ by the ClawTrade AI Team
+Built with Agent by the ClawTrade AI Team
