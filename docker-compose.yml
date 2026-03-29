@@ -1,0 +1,106 @@
+# ==========================================
+# ClawTrade AI - Docker Compose
+# ==========================================
+
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: clawtrade-postgres
+    environment:
+      POSTGRES_USER: clawtrade
+      POSTGRES_PASSWORD: clawtrade
+      POSTGRES_DB: clawtrade_ai
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U clawtrade"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis
+  redis:
+    image: redis:7-alpine
+    container_name: clawtrade-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Backend API
+  api:
+    build:
+      context: .
+      dockerfile: infra/docker/Dockerfile.api
+    container_name: clawtrade-api
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgresql://clawtrade:clawtrade@postgres:5432/clawtrade_ai?schema=public
+      REDIS_URL: redis://redis:6379
+      APP_PORT: 3001
+      FRONTEND_URL: http://localhost:3000
+      API_URL: http://localhost:3001
+      SOLANA_RPC_URL: https://api.mainnet-beta.solana.com
+      JUPITER_API_URL: https://quote-api.jup.ag/v6
+      WALLET_ENCRYPTION_KEY: ${WALLET_ENCRYPTION_KEY:-change-me-in-production}
+      JWT_SECRET: ${JWT_SECRET:-change-me-in-production}
+      TRADING_ENABLED: ${TRADING_ENABLED:-false}
+      MOCK_TRADING: ${MOCK_TRADING:-true}
+    ports:
+      - "3001:3001"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - .:/app
+      - /app/node_modules
+
+  # Frontend
+  web:
+    build:
+      context: .
+      dockerfile: infra/docker/Dockerfile.web
+    container_name: clawtrade-web
+    environment:
+      API_URL: http://localhost:3001
+      WS_URL: http://localhost:3001
+    ports:
+      - "3000:3000"
+    depends_on:
+      - api
+
+  # Agent Worker
+  worker:
+    build:
+      context: .
+      dockerfile: infra/docker/Dockerfile.api
+    container_name: clawtrade-worker
+    command: npm run worker
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgresql://clawtrade:clawtrade@postgres:5432/clawtrade_ai?schema=public
+      REDIS_URL: redis://redis:6379
+      SOLANA_RPC_URL: https://api.mainnet-beta.solana.com
+      JUPITER_API_URL: https://quote-api.jup.ag/v6
+      AGENT_INTERVAL_MS: 5000
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+volumes:
+  postgres_data:
+  redis_data:

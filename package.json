@@ -1,0 +1,53 @@
+{
+  "name": "clawtrade-ai",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Autonomous Intelligence for On-Chain Trading - Multi-agent AI trading platform on Solana",
+  "keywords": [
+    "solana",
+    "trading",
+    "ai",
+    "agents",
+    "defi",
+    "jupiter",
+    "web3"
+  ],
+  "author": "ClawTrade AI Team",
+  "license": "MIT",
+  "scripts": {
+    "dev": "turbo run dev",
+    "build": "turbo run build",
+    "start": "turbo run start",
+    "lint": "turbo run lint",
+    "test": "turbo run test",
+    "typecheck": "turbo run typecheck",
+    "type-check": "turbo run typecheck",
+    "clean": "turbo run clean && rm -rf node_modules",
+    "db:generate": "turbo run db:generate",
+    "db:migrate": "turbo run db:migrate",
+    "db:seed": "turbo run db:seed",
+    "docker:build": "docker-compose build",
+    "docker:up": "docker-compose up -d",
+    "docker:down": "docker-compose down"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "@typescript-eslint/eslint-plugin": "^6.19.0",
+    "@typescript-eslint/parser": "^6.19.0",
+    "eslint": "^8.56.0",
+    "prettier": "^3.2.0",
+    "prettier-plugin-tailwindcss": "^0.5.11",
+    "turbo": "^2.0.0",
+    "typescript": "^5.3.0",
+    "vitest": "^1.2.0"
+  },
+  "engines": {
+    "node": ">=20.0.0",
+    "npm": ">=10.0.0"
+  },
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "packageManager": "npm@10.0.0"
+}

@@ -1,0 +1,200 @@
+// ==========================================
+// ClawTrade AI - Prisma Schema
+// ==========================================
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ==========================================
+// User Management
+// ==========================================
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String
+  username  String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  wallets     Wallet[]
+  transactions Transaction[]
+  trades      Trade[]
+  portfolio   Portfolio[]
+  agentLogs   AgentLog[]
+
+  @@index([email])
+  @@index([username])
+}
+
+// ==========================================
+// Wallet Management
+// ==========================================
+
+model Wallet {
+  id             String   @id @default(uuid())
+  userId         String
+  address        String   @unique
+  encryptedPrivateKey String
+  publicKey      String
+  balanceSOL     Float    @default(0)
+  balanceUSDC    Float    @default(0)
+  isActive       Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  user        User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  transactions Transaction[]
+  trades       Trade[]
+
+  @@index([userId])
+  @@index([address])
+}
+
+// ==========================================
+// Transactions
+// ==========================================
+
+model Transaction {
+  id          String   @id @default(uuid())
+  userId      String
+  walletId    String
+  type        TransactionType
+  amount      Float
+  tokenMint   String?
+  signature   String?
+  status      TransactionStatus @default(PENDING)
+  metadata    Json?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  wallet   Wallet   @relation(fields: [walletId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([walletId])
+  @@index([status])
+  @@index([createdAt])
+}
+
+enum TransactionType {
+  DEPOSIT
+  WITHDRAWAL
+  TRANSFER
+  SWAP
+}
+
+enum TransactionStatus {
+  PENDING
+  CONFIRMED
+  FAILED
+}
+
+// ==========================================
+// Trading
+// ==========================================
+
+model Trade {
+  id              String   @id @default(uuid())
+  userId          String
+  walletId        String
+  type            TradeType
+  inputMint       String
+  outputMint      String
+  inputAmount     Float
+  outputAmount    Float
+  price           Float
+  slippageBps     Int
+  signature       String?
+  status          TradeStatus @default(PENDING)
+  agentDecision   String?
+  strategyId      String?
+  pnl             Float?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  wallet   Wallet   @relation(fields: [walletId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([walletId])
+  @@index([status])
+  @@index([type])
+  @@index([createdAt])
+}
+
+enum TradeType {
+  BUY
+  SELL
+}
+
+enum TradeStatus {
+  PENDING
+  EXECUTING
+  COMPLETED
+  FAILED
+  CANCELLED
+}
+
+// ==========================================
+// Portfolio Tracking
+// ==========================================
+
+model Portfolio {
+  id           String   @id @default(uuid())
+  userId       String
+  tokenMint    String
+  tokenSymbol  String
+  tokenName    String
+  balance      Float    @default(0)
+  averagePrice Float    @default(0)
+  currentValue Float    @default(0)
+  pnl          Float    @default(0)
+  pnlPercent   Float    @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, tokenMint])
+  @@index([userId])
+}
+
+// ==========================================
+// Agent System Logging
+// ==========================================
+
+model AgentLog {
+  id          String   @id @default(uuid())
+  userId      String?
+  agentType   AgentType
+  action      String
+  input       Json?
+  output      Json?
+  decision    String?
+  confidence  Float?
+  metadata    Json?
+  createdAt   DateTime @default(now())
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([agentType])
+  @@index([action])
+  @@index([createdAt])
+  @@index([userId])
+}
+
+enum AgentType {
+  SNIPER
+  ANALYST
+  RISK_MANAGER
+  STRATEGY
+  EXECUTOR
+  COORDINATOR
+}
